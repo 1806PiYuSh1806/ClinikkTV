@@ -23,4 +23,6 @@ router.post(
 router.get("/list", authMiddleware.authUser, mediaController.listMedia);
 router.get("/list/:id", authMiddleware.authUser, mediaController.getMedia);
 
+router.get("/stream/:id", mediaController.streamMedia);
+
 module.exports = router;

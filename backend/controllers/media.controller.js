@@ -1,6 +1,6 @@
 const Media = require("../models/media.model");
 const mediaService = require("../services/media.service");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 
 const randomFileName = (originalName) => {
   const ext = originalName.split(".").pop();
@@ -26,7 +26,6 @@ module.exports.uploadMedia = async (req, res) => {
         .status(400)
         .json({ message: "Title and description are required" });
 
-    // Generate unique file key
     const fileKey = randomFileName(req.file.originalname);
 
     const uploadParams = {
@@ -78,6 +77,32 @@ module.exports.getMedia = async (req, res) => {
     res.status(200).json({ media });
   } catch (error) {
     console.error("Error fetching media by ID:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports.streamMedia = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const media = await Media.findById(id);
+
+    if (!media) return res.status(404).json({ message: "Media not found" });
+
+    const s3Params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: `media/${media.url.split("/").pop()}`,
+    };
+
+    const command = new GetObjectCommand(s3Params);
+    const response = await s3.send(command);
+
+    res.setHeader("Content-Type", response.ContentType);
+    res.setHeader("Content-Length", response.ContentLength);
+    res.setHeader("Accept-Ranges", "bytes");
+
+    response.Body.pipe(res);
+  } catch (error) {
+    console.error("Streaming Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

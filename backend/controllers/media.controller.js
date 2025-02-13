@@ -57,3 +57,27 @@ module.exports.uploadMedia = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+module.exports.listMedia = async (req, res) => {
+  try {
+    const mediaList = await Media.find().select("-__v");
+    res.status(200).json({ media: mediaList });
+  } catch (error) {
+    console.error("List Media Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports.getMedia = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const media = await Media.findById(id).select("-__v");
+
+    if (!media) return res.status(404).json({ message: "Media not found" });
+
+    res.status(200).json({ media });
+  } catch (error) {
+    console.error("Error fetching media by ID:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

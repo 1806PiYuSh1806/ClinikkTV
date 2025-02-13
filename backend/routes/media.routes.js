@@ -9,14 +9,6 @@ const mediaController = require("../controllers/media.controller");
 
 const router = express.Router();
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 console.log("Media Controller:", mediaController);
@@ -27,5 +19,8 @@ router.post(
   upload.single("file"),
   mediaController.uploadMedia
 );
+
+router.get("/list", authMiddleware.authUser, mediaController.listMedia);
+router.get("/list/:id", authMiddleware.authUser, mediaController.getMedia);
 
 module.exports = router;
